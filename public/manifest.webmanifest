@@ -1,0 +1,9 @@
+{
+  "name": "MedSutra AI",
+  "short_name": "MedSutra",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1d4ed8",
+  "description": "Prescription scanning with grounded medicine verification, refill reminders, and offline history."
+}
