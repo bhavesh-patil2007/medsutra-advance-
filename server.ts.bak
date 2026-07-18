@@ -230,7 +230,6 @@ async function startServer(): Promise<void> {
   });
 
   app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
-    console.log('GOOGLE CALLBACK HIT', req.query);
     const code = typeof req.query.code === 'string' ? req.query.code : '';
     const state = typeof req.query.state === 'string' ? req.query.state : undefined;
     const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
@@ -247,7 +246,7 @@ async function startServer(): Promise<void> {
       const user = await signInWithProvider('google', { email: profile.email, name: profile.name || profile.email?.split('@')[0] });
       setSession(res, user);
       res.redirect('/');
-    } catch (err) { console.log('GOOGLE CALLBACK ERROR', err);
+    } catch {
       res.status(502).send('Google sign-in is temporarily unavailable. Please try again.');
     }
   });

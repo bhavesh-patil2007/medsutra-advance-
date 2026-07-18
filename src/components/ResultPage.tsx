@@ -649,7 +649,7 @@ export default function ResultPage({ result, profile, lang, onResultUpdate }: Re
                 <Mail className="h-5 w-5" />Auto-Mail via Slashy
               </button>
               <button onClick={() => navigate('/consult')} className="flex items-center justify-center gap-3 rounded-full border border-emerald-200 bg-emerald-50 px-5 py-4 font-bold text-emerald-700 shadow-sm transition hover:-translate-y-1 hover:bg-emerald-100">
-                <Stethoscope className="h-5 w-5" />Consult Doctor
+                <Stethoscope className="h-5 w-5" />{t.consultDoctor}
               </button>
             </div>
           </section>
@@ -660,7 +660,7 @@ export default function ResultPage({ result, profile, lang, onResultUpdate }: Re
               <h2 className="mt-1 text-2xl font-black tracking-tight text-[#1a3a6b]">Ask MedSutra AI</h2>
             </div>
             <div className="p-2 sm:p-4">
-              <ScopedChatPanel result={currentResult} mode={mode} />
+              <ScopedChatPanel result={currentResult} mode={mode} lang={lang} />
             </div>
           </section>
         </main>

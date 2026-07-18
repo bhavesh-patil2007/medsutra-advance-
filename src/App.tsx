@@ -53,7 +53,7 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <TermsModal />
+      <TermsModal lang={lang} />
       <BrowserRouter>
         <div className="min-h-screen bg-slate-50 pb-12 font-sans text-slate-900">
           <Routes>
@@ -102,7 +102,7 @@ export default function App() {
                 )
               }
             />
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth" element={<AuthPage lang={lang} />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/consult" element={<RequireAuth><ConsultDoctorPage /></RequireAuth>} />
           </Routes>

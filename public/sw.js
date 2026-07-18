@@ -21,7 +21,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  if (url.pathname.startsWith('/src/') || url.searchParams.has('t')) {
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/src/') || url.searchParams.has('t')) {
     event.respondWith(fetch(event.request));
     return;
   }

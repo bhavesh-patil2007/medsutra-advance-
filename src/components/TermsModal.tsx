@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { UI } from '../i18n';
+import { Lang } from '../types';
 
-export default function TermsModal() {
+export default function TermsModal({ lang }: { lang: Lang }) {
+    const t = UI[lang] as Record<string, string>;
     const [show, setShow] = useState(false);
 
     useEffect(() => {
@@ -27,8 +30,8 @@ export default function TermsModal() {
             }}>
                 {/* Header */}
                 <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid #e5e7eb' }}>
-                    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1a3a6b', margin: 0 }}>Terms & Conditions</h2>
-                    <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Please read before using MedSutra AI</p>
+                    <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1a3a6b', margin: 0 }}>{t.termsTitle}</h2>
+                    <p style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{t.termsSubtitle}</p>
                 </div>
 
                 {/* Content */}

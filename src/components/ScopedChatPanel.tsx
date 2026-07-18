@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bot, Loader2, Mic, MicOff, Send } from 'lucide-react';
-import { ExplainMode, PrescriptionChatMessage, PrescriptionResult } from '../types';
+import { ExplainMode, Lang, PrescriptionChatMessage, PrescriptionResult } from '../types';
 import { callMedicalChatbot } from '../services/aiService';
+import { UI } from '../i18n';
 
 interface ScopedChatPanelProps {
   result: PrescriptionResult;
   mode: ExplainMode;
+  lang: Lang;
 }
 
 type BrowserSpeechRecognition = {
@@ -52,7 +54,8 @@ function DoctorAvatar({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function ScopedChatPanel({ result, mode }: ScopedChatPanelProps) {
+export default function ScopedChatPanel({ result, mode, lang }: ScopedChatPanelProps) {
+  const t = UI[lang] as Record<string, string>;
   const [messages, setMessages] = useState<PrescriptionChatMessage[]>(
     result.chatHistory || []
   );
@@ -212,7 +215,7 @@ export default function ScopedChatPanel({ result, mode }: ScopedChatPanelProps) 
           <Bot className="h-5 w-5 text-white" />
         </div>
         <div>
-          <div className="text-sm font-bold text-[#1a3a6b]">Medical AI Assistant</div>
+          <div className="text-sm font-bold text-[#1a3a6b]">{t.medicalAiAssistant}</div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_#34d399]" />
             <span className="text-[11px] font-medium text-slate-400">Online · Prescription context loaded</span>

@@ -722,14 +722,14 @@ export default function ScanPage({ onResult, profile, lang, onLangChange }: Scan
             <button onClick={() => setActiveTab('howItWorks')} className={`rxb-nav-link ${activeTab === 'howItWorks' ? 'active' : ''}`}><HelpCircle size={15} /> {t.navHowItWorks || 'How It Works'}</button>
             <button onClick={() => setActiveTab('about')} className={`rxb-nav-link ${activeTab === 'about' ? 'active' : ''}`}><Users size={15} /> {t.navAboutUs || 'About Us'}</button>
             <a href="/pharmacies" className={`rxb-nav-link`}><MapPin size={15} /> {t.navNearbyPharmacies || 'Nearby Pharmacies'}</a>
-            <Link to="/consult" className="rxb-nav-link"><Stethoscope size={15} /> Consult Doctor</Link>
+            <Link to="/consult" className="rxb-nav-link"><Stethoscope size={15} /> {t.consultDoctor}</Link>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginLeft: 'auto' }}>
             {user ? (
-              <button onClick={() => void signOut()} className="rxb-nav-link">Sign Out</button>
+              <button onClick={() => void signOut()} className="rxb-nav-link">{t.signOut}</button>
             ) : (
-              <Link to="/auth" className="rxb-nav-link"><UserCheck size={15} /> Sign In</Link>
+              <Link to="/auth" className="rxb-nav-link"><UserCheck size={15} /> {t.signIn}</Link>
             )}
             <div className="rxb-lang-dropdown" onClick={(e) => e.stopPropagation()}>
               <button
@@ -799,7 +799,7 @@ export default function ScanPage({ onResult, profile, lang, onLangChange }: Scan
                 <div style={{ fontSize: 23, fontWeight: 700, color: '#1a3a6b', marginBottom: 10 }}>{t.scanTitle || 'Scan Prescription'}</div>
                 <div style={{ fontSize: 14, color: '#7b93b8', lineHeight: 1.55, marginBottom: 30 }}>{t.scanSubtitle || 'Take a photo or upload an image.'}</div>
                 <div style={{ marginBottom: 18, padding: '12px 14px', borderRadius: 14, background: '#f8fbff', border: '1px solid #dbeafe', width: '100%', textAlign: 'left' }}>
-                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase' }}>Active family profile</div>
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase' }}>{t.activeFamilyProfile}</div>
                   <div style={{ marginTop: 6, fontSize: 15, color: '#1a3a6b', fontWeight: 700 }}>{profile.name}</div>
                   <div style={{ marginTop: 4, fontSize: 12.5, color: '#64748b' }}>
                     {profile.allergies.length > 0 ? `Allergies: ${profile.allergies.join(', ')}` : 'No allergies saved for this profile yet.'}
@@ -1140,7 +1140,7 @@ export default function ScanPage({ onResult, profile, lang, onLangChange }: Scan
         )}
 
       </div>
-      <SupportWidget />
+      <SupportWidget lang={lang} />
       <canvas ref={preprocessCanvasRef} style={{ display: 'none' }} />
     </div>
   );

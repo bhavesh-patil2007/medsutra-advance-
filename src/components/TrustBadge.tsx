@@ -20,12 +20,12 @@ export default function TrustBadge({ metadata }) {
     <div className={`rounded-3xl border p-5 shadow-sm ${styles.bg}`}>
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-xs font-bold uppercase tracking-[0.25em] opacity-70">Prescription Trust Score</div>
+          <div className="text-xs font-bold uppercase tracking-[0.25em] opacity-70">{t.trustScoreTitle}</div>
           <div className="mt-3 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/70">{styles.icon}</div>
             <div>
               <div className="text-3xl font-black leading-none">{score}%</div>
-              <div className="text-xs font-medium opacity-80">Final Confidence</div>
+              <div className="text-xs font-medium opacity-80">{t.finalConfidence}</div>
             </div>
           </div>
         </div>
@@ -34,12 +34,12 @@ export default function TrustBadge({ metadata }) {
 
       <div className="mt-5 flex overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80">
         <div className="flex-1 px-4 py-3">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Drug DB Match</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{t.drugDbMatch}</div>
           <div className="mt-1 text-lg font-bold text-slate-800">{nameMatch}%</div>
         </div>
         <div className="w-px bg-slate-200" />
         <div className="flex-1 px-4 py-3">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">AI Consistency</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{t.aiConsistency}</div>
           <div className="mt-1 text-lg font-bold text-slate-800">{selfCheck}%</div>
         </div>
       </div>

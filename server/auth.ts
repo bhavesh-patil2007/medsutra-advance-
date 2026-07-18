@@ -71,8 +71,8 @@ function parseSession(token?: string): AuthUser | null {
   try { const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as AuthUser & { exp: number }; return parsed.id && parsed.email && parsed.exp > Date.now() ? { id: parsed.id, email: parsed.email, name: parsed.name, role: parsed.role || 'patient' } : null; } catch { return null; }
 }
 function cookieValue(request: Request, name: string): string | undefined { return request.headers.cookie?.split(';').map((entry) => entry.trim()).find((entry) => entry.startsWith(`${name}=`))?.slice(name.length + 1); }
-export function setSession(response: Response, user: AuthUser) { const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''; response.setHeader('Set-Cookie', `medsutra_session=${createSession(user)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}${secure}`); }
-export function clearSession(response: Response) { const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''; response.setHeader('Set-Cookie', `medsutra_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`); }
+export function setSession(response: Response, user: AuthUser) { const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''; response.setHeader('Set-Cookie', `medsutra_session=${createSession(user)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}${secure}`); }
+export function clearSession(response: Response) { const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''; response.setHeader('Set-Cookie', `medsutra_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`); }
 export function requestUser(request: Request): AuthUser | null { return parseSession(cookieValue(request, 'medsutra_session')); }
 export function requireAuth(request: Request, response: Response, next: NextFunction) { const user = requestUser(request); if (!user) return response.status(401).json({ error: 'Please sign in to continue.' }); (request as Request & { user?: AuthUser }).user = user; next(); }
 

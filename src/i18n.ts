@@ -174,6 +174,29 @@ export const UI: Record<Lang, {
   navAboutUs: string;
   navNearbyPharmacies: string;
   navTagline: string;
+  signIn: string;
+  backToMedSutra: string;
+  createYourAccount: string;
+  resetYourPassword: string;
+  welcomeBack: string;
+  authSubtitle: string;
+  emailAddress: string;
+  passwordLabel: string;
+  passwordHint: string;
+  pleaseWait: string;
+  createSecureAccount: string;
+  requestResetLink: string;
+  alreadyHaveAccount: string;
+  newToMedSutra: string;
+  createAnAccount: string;
+  forgotPassword: string;
+  continueWithGoogle: string;
+  googleSignInNote: string;
+  consultDoctor: string;
+  needHelp: string;
+  supportChannelsWarning: string;
+  consultADoctor: string;
+  callSupport: string;
 
   // Hero section
   heroHeadline: string;
@@ -306,6 +329,15 @@ export const UI: Record<Lang, {
   clinic: string;
   dawakhana: string;
   dispensary: string;
+  signOut: string;
+  activeFamilyProfile: string;
+  trustScoreTitle: string;
+  finalConfidence: string;
+  drugDbMatch: string;
+  aiConsistency: string;
+  medicalAiAssistant: string;
+  termsTitle: string;
+  termsSubtitle: string;
 }> = {
 
   /* ════════════════════════════════════════════════════════════════════════
@@ -333,6 +365,29 @@ export const UI: Record<Lang, {
     navAboutUs: 'About Us',
     navNearbyPharmacies: 'Nearby Pharmacies',
     navTagline: 'Smart Medicine Assistant',
+    signIn: 'Sign In',
+    backToMedSutra: 'Back to MedSutra',
+    createYourAccount: 'Create your account',
+    resetYourPassword: 'Reset your password',
+    welcomeBack: 'Welcome back',
+    authSubtitle: 'Your account keeps your profile, consultation requests, and prescription information protected.',
+    emailAddress: 'Email address',
+    passwordLabel: 'Password',
+    passwordHint: 'At least 10 characters',
+    pleaseWait: 'Please wait...',
+    createSecureAccount: 'Create secure account',
+    requestResetLink: 'Request reset link',
+    alreadyHaveAccount: 'Already have an account?',
+    newToMedSutra: 'New to MedSutra?',
+    createAnAccount: 'Create an account',
+    forgotPassword: 'Forgot password?',
+    continueWithGoogle: 'Continue with Google',
+    googleSignInNote: 'Google sign-in requires the OAuth credentials in .env. Apple Sign In can be added for supported iOS deployments; phone OTP is optional.',
+    consultDoctor: 'Consult Doctor',
+    needHelp: 'Need help?',
+    supportChannelsWarning: 'Use verified support channels. Never send passwords or full prescription images over an unverified call or message.',
+    consultADoctor: 'Consult a doctor',
+    callSupport: 'Call support',
     heroHeadline: 'Your Prescription, Our',
     heroPriorityWord: 'Priority',
     heroSubtext: 'Upload your prescription and get clear, safe and easy to understand information about your medicines.',
@@ -431,6 +486,15 @@ export const UI: Record<Lang, {
     howToUseTitle: 'How to Use MedSutra AI',
     howToUseSubtitle: 'Just upload your prescription and get clear, safe instructions in seconds.',
     dispensary: 'Dispensary',
+    signOut: 'Sign Out',
+    activeFamilyProfile: 'Active family profile',
+    trustScoreTitle: 'Prescription Trust Score',
+    finalConfidence: 'Final Confidence',
+    drugDbMatch: 'Drug DB Match',
+    aiConsistency: 'AI Consistency',
+    medicalAiAssistant: 'Medical AI Assistant',
+    termsTitle: 'Terms & Conditions',
+    termsSubtitle: 'Please read before using MedSutra AI',
     aboutTitle: 'About MedSutra AI',
     aboutTagline: 'Smart Medicine Assistant for every Indian family',
     aboutMission1: 'At MedSutra AI, we believe healthcare should be understandable, accessible, and safe for everyone.',
@@ -468,6 +532,29 @@ export const UI: Record<Lang, {
     navAboutUs: 'हमारे बारे में',
     navNearbyPharmacies: 'नज़दीकी दवाखाना',
     navTagline: 'स्मार्ट दवा सहायक',
+    signIn: 'साइन इन करें',
+    backToMedSutra: 'MedSutra पर वापस जाएं',
+    createYourAccount: 'अपना खाता बनाएं',
+    resetYourPassword: 'अपना पासवर्ड रीसेट करें',
+    welcomeBack: 'वापसी पर स्वागत है',
+    authSubtitle: 'आपका खाता आपकी प्रोफ़ाइल, परामर्श अनुरोध और पर्चे की जानकारी को सुरक्षित रखता है।',
+    emailAddress: 'ईमेल पता',
+    passwordLabel: 'पासवर्ड',
+    passwordHint: 'कम से कम 10 अक्षर',
+    pleaseWait: 'कृपया प्रतीक्षा करें...',
+    createSecureAccount: 'सुरक्षित खाता बनाएं',
+    requestResetLink: 'रीसेट लिंक का अनुरोध करें',
+    alreadyHaveAccount: 'क्या पहले से खाता है?',
+    newToMedSutra: 'MedSutra पर नए हैं?',
+    createAnAccount: 'खाता बनाएं',
+    forgotPassword: 'पासवर्ड भूल गए?',
+    continueWithGoogle: 'Google के साथ जारी रखें',
+    googleSignInNote: 'Google साइन-इन के लिए .env में OAuth क्रेडेंशियल आवश्यक हैं।',
+    consultDoctor: 'डॉक्टर से सलाह लें',
+    needHelp: 'सहायता चाहिए?',
+    supportChannelsWarning: 'सत्यापित सहायता माध्यमों का ही उपयोग करें। किसी असत्यापित कॉल या संदेश पर पासवर्ड या पूरी पर्ची की तस्वीरें कभी न भेजें।',
+    consultADoctor: 'डॉक्टर से सलाह लें',
+    callSupport: 'सहायता को कॉल करें',
     heroHeadline: 'आपका पर्चा, हमारी',
     heroPriorityWord: 'प्राथमिकता',
     heroSubtext: 'अपना पर्चा अपलोड करें और अपनी दवाओं के बारे में स्पष्ट, सुरक्षित और आसानी से समझने वाली जानकारी प्राप्त करें।',
@@ -566,6 +653,15 @@ export const UI: Record<Lang, {
     howToUseTitle: 'MedSutra AI कैसे उपयोग करें',
     howToUseSubtitle: 'बस अपना पर्चा अपलोड करें और सेकंडों में स्पष्ट, सुरक्षित निर्देश पाएँ।',
     dispensary: 'औषधालय',
+    signOut: 'साइन आउट करें',
+    activeFamilyProfile: 'सक्रिय परिवार प्रोफ़ाइल',
+    trustScoreTitle: 'पर्चा विश्वास स्कोर',
+    finalConfidence: 'अंतिम विश्वसनीयता',
+    drugDbMatch: 'दवा डेटाबेस मिलान',
+    aiConsistency: 'AI संगति',
+    medicalAiAssistant: 'चिकित्सा AI सहायक',
+    termsTitle: 'नियम एवं शर्तें',
+    termsSubtitle: 'MedSutra AI का उपयोग करने से पहले कृपया पढ़ें',
     aboutTitle: 'MedSutra AI के बारे में',
     aboutTagline: 'हर भारतीय परिवार के लिए स्मार्ट दवा सहायक',
     aboutMission1: 'MedSutra AI में, हम मानते हैं कि स्वास्थ्य सेवा सभी के लिए समझने योग्य, सुलभ और सुरक्षित होनी चाहिए।',
@@ -603,6 +699,29 @@ export const UI: Record<Lang, {
     navAboutUs: 'आमच्याबद्दल',
     navNearbyPharmacies: 'जवळील औषधालय',
     navTagline: 'स्मार्ट औषध सहायक',
+    signIn: 'साइन इन करा',
+    backToMedSutra: 'MedSutra वर परत जा',
+    createYourAccount: 'तुमचे खाते तयार करा',
+    resetYourPassword: 'तुमचा पासवर्ड रीसेट करा',
+    welcomeBack: 'पुन्हा स्वागत आहे',
+    authSubtitle: 'तुमचे खाते तुमची प्रोफाइल, सल्ला विनंत्या आणि प्रिस्क्रिप्शन माहिती सुरक्षित ठेवते.',
+    emailAddress: 'ईमेल पत्ता',
+    passwordLabel: 'पासवर्ड',
+    passwordHint: 'किमान 10 अक्षरे',
+    pleaseWait: 'कृपया प्रतीक्षा करा...',
+    createSecureAccount: 'सुरक्षित खाते तयार करा',
+    requestResetLink: 'रीसेट लिंकची विनंती करा',
+    alreadyHaveAccount: 'आधीच खाते आहे का?',
+    newToMedSutra: 'MedSutra वर नवीन आहात?',
+    createAnAccount: 'खाते तयार करा',
+    forgotPassword: 'पासवर्ड विसरलात?',
+    continueWithGoogle: 'Google सह सुरू ठेवा',
+    googleSignInNote: 'Google साइन-इनसाठी .env मध्ये OAuth क्रेडेन्शियल्स आवश्यक आहेत.',
+    consultDoctor: 'डॉक्टरांचा सल्ला घ्या',
+    needHelp: 'मदत हवी आहे?',
+    supportChannelsWarning: 'फक्त सत्यापित सहाय्य माध्यमांचा वापर करा. कोणत्याही असत्यापित कॉल किंवा संदेशावर पासवर्ड किंवा संपूर्ण प्रिस्क्रिप्शनचे फोटो कधीही पाठवू नका.',
+    consultADoctor: 'डॉक्टरांचा सल्ला घ्या',
+    callSupport: 'सहाय्याला कॉल करा',
     heroHeadline: 'तुमचे प्रिस्क्रिप्शन, आमची',
     heroPriorityWord: 'प्राथमिकता',
     heroSubtext: 'तुमचे प्रिस्क्रिप्शन अपलोड करा आणि तुमच्या औषधांबद्दल स्पष्ट, सुरक्षित आणि सहज समजेल अशी माहिती मिळवा.',
@@ -701,6 +820,15 @@ export const UI: Record<Lang, {
     howToUseTitle: 'MedSutra AI कसे वापरावे',
     howToUseSubtitle: 'फक्त तुमचे प्रिस्क्रिप्शन अपलोड करा आणि सेकंदात स्पष्ट, सुरक्षित सूचना मिळवा.',
     dispensary: 'औषध वितरण केंद्र',
+    signOut: 'साइन आउट करा',
+    activeFamilyProfile: 'सक्रिय कुटुंब प्रोफाइल',
+    trustScoreTitle: 'प्रिस्क्रिप्शन विश्वास गुण',
+    finalConfidence: 'अंतिम विश्वासार्हता',
+    drugDbMatch: 'औषध डेटाबेस जुळणी',
+    aiConsistency: 'AI सुसंगतता',
+    medicalAiAssistant: 'वैद्यकीय AI सहाय्यक',
+    termsTitle: 'अटी व शर्ती',
+    termsSubtitle: 'MedSutra AI वापरण्यापूर्वी कृपया वाचा',
     aboutTitle: 'MedSutra AI बद्दल',
     aboutTagline: 'प्रत्येक भारतीय कुटुंबासाठी स्मार्ट औषध सहाय्यक',
     aboutMission1: 'MedSutra AI मध्ये, आम्ही विश्वास ठेवतो की आरोग्य सेवा सर्वांसाठी समजण्यायोग्य, सुलभ आणि सुरक्षित असावी.',
