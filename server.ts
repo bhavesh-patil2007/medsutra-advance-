@@ -442,9 +442,25 @@ async function startServer(): Promise<void> {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`RxBridge Server running at http://localhost:${PORT}`);
-  });
+  if (process.env.VERCEL !== "1") {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`RxBridge Server running at http://localhost:${PORT}`);
+    });
+  }
+  return app;
 }
 
-startServer();
+let cachedApp: express.Express | null = null;
+async function getApp() {
+  if (!cachedApp) cachedApp = await startServer();
+  return cachedApp;
+}
+
+if (process.env.VERCEL !== "1") {
+  startServer();
+}
+
+export default async function handler(req: Request, res: Response) {
+  const app = await getApp();
+  app(req, res);
+}
