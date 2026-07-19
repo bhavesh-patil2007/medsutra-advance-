@@ -34,7 +34,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer(): Promise<void> {
+async function startServer(): Promise<express.Express> {
   const app = express();
   const PORT = 3000;
 
