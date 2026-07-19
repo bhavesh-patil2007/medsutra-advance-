@@ -1,28 +1,67 @@
-import { createCipheriv, createDecipheriv, createHmac, randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import { Pool } from 'pg';
 import type { NextFunction, Request, Response } from 'express';
 
 const scrypt = promisify(scryptCallback);
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 30 * 60 * 1000;
-const storePath = path.join(process.cwd(), 'data', 'medsutra-secure-store.enc');
 
 export interface AuthUser { id: string; email: string; name: string; role: 'patient' | 'admin'; }
 interface StoredUser extends AuthUser { passwordHash?: string; passwordSalt?: string; provider?: 'password' | 'google' | 'apple'; createdAt: string; }
 export interface ConsultationRecord { id: string; userId: string; reason: string; preferredDate: string; preferredTime: string; consultationType: 'video' | 'chat' | 'phone'; status: 'requested'; createdAt: string; }
-interface PasswordResetRecord { tokenHash: string; userId: string; expiresAt: number; }
-interface SecureStore { users: StoredUser[]; consultations: ConsultationRecord[]; passwordResets: PasswordResetRecord[]; }
 
-const emptyStore = (): SecureStore => ({ users: [], consultations: [], passwordResets: [] });
-let storePromise: Promise<SecureStore> | null = null;
-let writeQueue: Promise<void> = Promise.resolve();
+// --- Postgres connection (Supabase-provisioned) ---
+let pool: Pool | null = null;
+let initPromise: Promise<void> | null = null;
 
-function encryptionKey(): Buffer {
-  const configured = process.env.DATA_ENCRYPTION_KEY;
-  if (!configured && process.env.NODE_ENV === 'production') throw new Error('DATA_ENCRYPTION_KEY is required in production.');
-  return createHmac('sha256', 'medsutra-auth-store').update(configured || 'development-only-key-change-before-deploy').digest();
+function getPool(): Pool {
+  if (!pool) {
+    const connectionString = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+    if (!connectionString) throw new Error('POSTGRES_URL is required. Connect a Postgres database in Vercel Storage.');
+    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false }, max: 5 });
+  }
+  return pool;
+}
+
+async function ensureSchema(): Promise<void> {
+  if (!initPromise) {
+    initPromise = (async () => {
+      const client = getPool();
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id UUID PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'patient',
+          password_hash TEXT,
+          password_salt TEXT,
+          provider TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS consultations (
+          id UUID PRIMARY KEY,
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          reason TEXT NOT NULL,
+          preferred_date TEXT NOT NULL,
+          preferred_time TEXT NOT NULL,
+          consultation_type TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'requested',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
+      `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS password_resets (
+          token_hash TEXT PRIMARY KEY,
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          expires_at BIGINT NOT NULL
+        );
+      `);
+    })();
+  }
+  return initPromise;
 }
 
 function sessionSecret(): string {
@@ -31,36 +70,8 @@ function sessionSecret(): string {
   return configured || 'development-only-session-secret-change-before-deploy';
 }
 
-function encrypt(value: string): string {
-  const iv = randomBytes(12); const cipher = createCipheriv('aes-256-gcm', encryptionKey(), iv);
-  const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
-  return JSON.stringify({ iv: iv.toString('base64url'), tag: cipher.getAuthTag().toString('base64url'), data: encrypted.toString('base64url') });
-}
-
-function decrypt(value: string): string {
-  const parsed = JSON.parse(value) as { iv: string; tag: string; data: string };
-  const decipher = createDecipheriv('aes-256-gcm', encryptionKey(), Buffer.from(parsed.iv, 'base64url'));
-  decipher.setAuthTag(Buffer.from(parsed.tag, 'base64url'));
-  return Buffer.concat([decipher.update(Buffer.from(parsed.data, 'base64url')), decipher.final()]).toString('utf8');
-}
-
-async function loadStore(): Promise<SecureStore> {
-  try {
-    const parsed = JSON.parse(decrypt(await readFile(storePath, 'utf8'))) as Partial<SecureStore>;
-    return { users: Array.isArray(parsed.users) ? parsed.users : [], consultations: Array.isArray(parsed.consultations) ? parsed.consultations : [], passwordResets: Array.isArray(parsed.passwordResets) ? parsed.passwordResets : [] };
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return emptyStore();
-    throw error;
-  }
-}
-
-async function getStore(): Promise<SecureStore> { storePromise ||= loadStore(); return storePromise; }
-async function persistStore(store: SecureStore): Promise<void> {
-  writeQueue = writeQueue.then(async () => { await mkdir(path.dirname(storePath), { recursive: true }); const tempPath = `${storePath}.${randomBytes(6).toString('hex')}.tmp`; await writeFile(tempPath, encrypt(JSON.stringify(store)), { mode: 0o600 }); await rename(tempPath, storePath); });
-  return writeQueue;
-}
 function normalizeEmail(value: unknown): string { return typeof value === 'string' ? value.trim().toLowerCase() : ''; }
-function publicUser(user: StoredUser): AuthUser { return { id: user.id, email: user.email, name: user.name, role: user.role }; }
+function rowToPublicUser(row: any): AuthUser { return { id: row.id, email: row.email, name: row.name, role: row.role }; }
 async function hashPassword(password: string, salt = randomBytes(16).toString('base64url')) { const hash = await scrypt(password, salt, 64) as Buffer; return { salt, hash: hash.toString('base64url') }; }
 async function passwordsMatch(password: string, salt: string, expectedHash: string): Promise<boolean> { const { hash } = await hashPassword(password, salt); const expected = Buffer.from(expectedHash, 'base64url'); const actual = Buffer.from(hash, 'base64url'); return expected.length === actual.length && timingSafeEqual(expected, actual); }
 function createSession(user: AuthUser): string { const payload = Buffer.from(JSON.stringify({ ...user, exp: Date.now() + SESSION_TTL_MS })).toString('base64url'); return `${payload}.${createHmac('sha256', sessionSecret()).update(payload).digest('base64url')}`; }
@@ -77,20 +88,113 @@ export function requestUser(request: Request): AuthUser | null { return parseSes
 export function requireAuth(request: Request, response: Response, next: NextFunction) { const user = requestUser(request); if (!user) return response.status(401).json({ error: 'Please sign in to continue.' }); (request as Request & { user?: AuthUser }).user = user; next(); }
 
 export async function signUp(input: { name?: unknown; email?: unknown; password?: unknown }): Promise<AuthUser> {
-  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : ''; const email = normalizeEmail(input.email); const password = typeof input.password === 'string' ? input.password : '';
-  if (!name || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Enter a valid name and email address.'); if (password.length < 10) throw new Error('Use a password with at least 10 characters.');
-  const store = await getStore(); if (store.users.some((user) => user.email === email)) throw new Error('An account already exists for this email address.');
-  const { salt, hash } = await hashPassword(password); const user: StoredUser = { id: randomUUID(), name, email, role: 'patient', passwordSalt: salt, passwordHash: hash, provider: 'password', createdAt: new Date().toISOString() };
-  store.users.push(user); await persistStore(store); return publicUser(user);
+  await ensureSchema();
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : '';
+  const email = normalizeEmail(input.email);
+  const password = typeof input.password === 'string' ? input.password : '';
+  if (!name || !/^\S+@\S+\.\S+$/.test(email)) throw new Error('Enter a valid name and email address.');
+  if (password.length < 10) throw new Error('Use a password with at least 10 characters.');
+
+  const existing = await getPool().query('SELECT id FROM users WHERE email = $1', [email]);
+  if (existing.rows.length > 0) throw new Error('An account already exists for this email address.');
+
+  const { salt, hash } = await hashPassword(password);
+  const id = randomUUID();
+  await getPool().query(
+    `INSERT INTO users (id, email, name, role, password_hash, password_salt, provider, created_at)
+     VALUES ($1, $2, $3, 'patient', $4, $5, 'password', now())`,
+    [id, email, name, hash, salt]
+  );
+  return { id, email, name, role: 'patient' };
 }
-export async function signIn(input: { email?: unknown; password?: unknown }): Promise<AuthUser | null> { const email = normalizeEmail(input.email); const password = typeof input.password === 'string' ? input.password : ''; const user = (await getStore()).users.find((candidate) => candidate.email === email && candidate.provider === 'password'); return user?.passwordSalt && user.passwordHash && await passwordsMatch(password, user.passwordSalt, user.passwordHash) ? publicUser(user) : null; }
-export async function signInWithProvider(provider: 'google' | 'apple', input: { email?: unknown; name?: unknown }): Promise<AuthUser> { const email = normalizeEmail(input.email); const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : ''; if (!/^\S+@\S+\.\S+$/.test(email) || !name) throw new Error('The identity provider did not return a verified name and email address.'); const store = await getStore(); const existing = store.users.find((candidate) => candidate.email === email); if (existing) return publicUser(existing); const user: StoredUser = { id: randomUUID(), email, name, role: 'patient', provider, createdAt: new Date().toISOString() }; store.users.push(user); await persistStore(store); return publicUser(user); }
+
+export async function signIn(input: { email?: unknown; password?: unknown }): Promise<AuthUser | null> {
+  await ensureSchema();
+  const email = normalizeEmail(input.email);
+  const password = typeof input.password === 'string' ? input.password : '';
+  const result = await getPool().query(
+    `SELECT * FROM users WHERE email = $1 AND provider = 'password'`,
+    [email]
+  );
+  const user = result.rows[0];
+  if (!user || !user.password_salt || !user.password_hash) return null;
+  const matches = await passwordsMatch(password, user.password_salt, user.password_hash);
+  return matches ? rowToPublicUser(user) : null;
+}
+
+export async function signInWithProvider(provider: 'google' | 'apple', input: { email?: unknown; name?: unknown }): Promise<AuthUser> {
+  await ensureSchema();
+  const email = normalizeEmail(input.email);
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 80) : '';
+  if (!/^\S+@\S+\.\S+$/.test(email) || !name) throw new Error('The identity provider did not return a verified name and email address.');
+
+  const existing = await getPool().query('SELECT * FROM users WHERE email = $1', [email]);
+  if (existing.rows.length > 0) return rowToPublicUser(existing.rows[0]);
+
+  const id = randomUUID();
+  await getPool().query(
+    `INSERT INTO users (id, email, name, role, provider, created_at) VALUES ($1, $2, $3, 'patient', $4, now())`,
+    [id, email, name, provider]
+  );
+  return { id, email, name, role: 'patient' };
+}
+
 export function createOAuthState(provider: 'google' | 'apple'): string { const payload = Buffer.from(JSON.stringify({ provider, exp: Date.now() + 10 * 60 * 1000, nonce: randomBytes(12).toString('base64url') })).toString('base64url'); return `${payload}.${createHmac('sha256', sessionSecret()).update(payload).digest('base64url')}`; }
 export function validateOAuthState(provider: 'google' | 'apple', state: string | undefined): boolean { const [payload, signature] = state?.split('.') || []; if (!payload || !signature) return false; const expected = createHmac('sha256', sessionSecret()).update(payload).digest('base64url'); if (expected.length !== signature.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return false; try { const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as { provider?: string; exp?: number }; return parsed.provider === provider && typeof parsed.exp === 'number' && parsed.exp > Date.now(); } catch { return false; } }
+
 export async function saveConsultation(user: AuthUser, input: Record<string, unknown>): Promise<ConsultationRecord> {
-  const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 500) : ''; const preferredDate = typeof input.preferredDate === 'string' ? input.preferredDate : ''; const preferredTime = typeof input.preferredTime === 'string' ? input.preferredTime : ''; const consultationType = input.consultationType === 'chat' || input.consultationType === 'phone' ? input.consultationType : 'video';
+  await ensureSchema();
+  const reason = typeof input.reason === 'string' ? input.reason.trim().slice(0, 500) : '';
+  const preferredDate = typeof input.preferredDate === 'string' ? input.preferredDate : '';
+  const preferredTime = typeof input.preferredTime === 'string' ? input.preferredTime : '';
+  const consultationType = input.consultationType === 'chat' || input.consultationType === 'phone' ? input.consultationType : 'video';
   if (!reason || !/^\d{4}-\d{2}-\d{2}$/.test(preferredDate) || !/^\d{2}:\d{2}$/.test(preferredTime)) throw new Error('Add a reason and a valid preferred date and time.');
-  const record: ConsultationRecord = { id: randomUUID(), userId: user.id, reason, preferredDate, preferredTime, consultationType, status: 'requested', createdAt: new Date().toISOString() }; const store = await getStore(); store.consultations.push(record); await persistStore(store); return record;
+
+  const id = randomUUID();
+  const createdAt = new Date().toISOString();
+  await getPool().query(
+    `INSERT INTO consultations (id, user_id, reason, preferred_date, preferred_time, consultation_type, status, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, 'requested', now())`,
+    [id, user.id, reason, preferredDate, preferredTime, consultationType]
+  );
+  return { id, userId: user.id, reason, preferredDate, preferredTime, consultationType, status: 'requested', createdAt };
 }
-export async function createPasswordReset(emailValue: unknown): Promise<string | null> { const user = (await getStore()).users.find((candidate) => candidate.email === normalizeEmail(emailValue) && candidate.provider === 'password'); if (!user) return null; const token = randomBytes(32).toString('base64url'); const store = await getStore(); store.passwordResets = store.passwordResets.filter((record) => record.expiresAt > Date.now()); store.passwordResets.push({ tokenHash: createHmac('sha256', sessionSecret()).update(token).digest('base64url'), userId: user.id, expiresAt: Date.now() + RESET_TTL_MS }); await persistStore(store); return token; }
-export async function resetPassword(input: { token?: unknown; password?: unknown }): Promise<boolean> { const token = typeof input.token === 'string' ? input.token : ''; const password = typeof input.password === 'string' ? input.password : ''; if (!token || password.length < 10) return false; const store = await getStore(); const tokenHash = createHmac('sha256', sessionSecret()).update(token).digest('base64url'); const record = store.passwordResets.find((entry) => entry.tokenHash === tokenHash && entry.expiresAt > Date.now()); const user = record && store.users.find((entry) => entry.id === record.userId); if (!record || !user) return false; const { salt, hash } = await hashPassword(password); user.passwordSalt = salt; user.passwordHash = hash; store.passwordResets = store.passwordResets.filter((entry) => entry !== record); await persistStore(store); return true; }
+
+export async function createPasswordReset(emailValue: unknown): Promise<string | null> {
+  await ensureSchema();
+  const email = normalizeEmail(emailValue);
+  const result = await getPool().query(`SELECT id FROM users WHERE email = $1 AND provider = 'password'`, [email]);
+  const user = result.rows[0];
+  if (!user) return null;
+
+  const token = randomBytes(32).toString('base64url');
+  const tokenHash = createHmac('sha256', sessionSecret()).update(token).digest('base64url');
+  const expiresAt = Date.now() + RESET_TTL_MS;
+
+  await getPool().query('DELETE FROM password_resets WHERE expires_at <= $1', [Date.now()]);
+  await getPool().query(
+    'INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES ($1, $2, $3)',
+    [tokenHash, user.id, expiresAt]
+  );
+  return token;
+}
+
+export async function resetPassword(input: { token?: unknown; password?: unknown }): Promise<boolean> {
+  await ensureSchema();
+  const token = typeof input.token === 'string' ? input.token : '';
+  const password = typeof input.password === 'string' ? input.password : '';
+  if (!token || password.length < 10) return false;
+
+  const tokenHash = createHmac('sha256', sessionSecret()).update(token).digest('base64url');
+  const result = await getPool().query(
+    'SELECT * FROM password_resets WHERE token_hash = $1 AND expires_at > $2',
+    [tokenHash, Date.now()]
+  );
+  const record = result.rows[0];
+  if (!record) return false;
+
+  const { salt, hash } = await hashPassword(password);
+  await getPool().query('UPDATE users SET password_salt = $1, password_hash = $2 WHERE id = $3', [salt, hash, record.user_id]);
+  await getPool().query('DELETE FROM password_resets WHERE token_hash = $1', [tokenHash]);
+  return true;
+}
