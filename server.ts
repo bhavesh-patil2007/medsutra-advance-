@@ -427,7 +427,8 @@ async function startServer(): Promise<express.Express> {
 
   // Vite integration
   if (process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1") {
-    const { createServer: createViteServer } = await import("vite");
+    const dynamicImport = new Function("specifier", "return import(specifier)");
+    const { createServer: createViteServer } = await dynamicImport("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
