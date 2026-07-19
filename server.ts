@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createServer as createViteServer } from "vite";
 import fs from "fs/promises";
 import dotenv from "dotenv";
 import {
@@ -427,7 +426,8 @@ async function startServer(): Promise<express.Express> {
   });
 
   // Vite integration
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
